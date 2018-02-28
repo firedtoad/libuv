@@ -29,6 +29,7 @@
 #include <string.h> /* strrchr */
 #include <fcntl.h>  /* O_CLOEXEC, may be */
 #include <stdio.h>
+#include <errno.h>
 
 #if defined(__STRICT_ANSI__)
 # define inline __inline
@@ -151,6 +152,12 @@ enum {
   UV_LOOP_BLOCK_SIGPROF = 1
 };
 
+/* flags of excluding ifaddr */
+enum {
+  UV__EXCLUDE_IFPHYS,
+  UV__EXCLUDE_IFADDR
+};
+
 typedef enum {
   UV_CLOCK_PRECISE = 0,  /* Use the highest resolution clock available. */
   UV_CLOCK_FAST = 1      /* Use the fastest clock with <= 1ms granularity. */
@@ -169,7 +176,8 @@ struct uv__stream_queued_fds_s {
     defined(__FreeBSD__) || \
     defined(__FreeBSD_kernel__) || \
     defined(__linux__) || \
-    defined(__OpenBSD__)
+    defined(__OpenBSD__) || \
+    defined(__NetBSD__)
 #define uv__cloexec uv__cloexec_ioctl
 #define uv__nonblock uv__nonblock_ioctl
 #else
