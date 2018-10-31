@@ -76,6 +76,11 @@ int process_start(char *name, char *part, process_info_t *p, int is_helper) {
   PROCESS_INFORMATION pi;
   DWORD result;
 
+  if (!is_helper) {
+    /* Give the helpers time to settle. Race-y, fix this. */
+    uv_sleep(250);
+  }
+
   if (GetTempPathW(sizeof(path) / sizeof(WCHAR), (WCHAR*)&path) == 0)
     goto error;
   if (GetTempFileNameW((WCHAR*)&path, L"uv", 0, (WCHAR*)&filename) == 0)
@@ -165,8 +170,8 @@ error:
 }
 
 
-/* Timeout is is msecs. Set timeout < 0 to never time out. */
-/* Returns 0 when all processes are terminated, -2 on timeout. */
+/* Timeout is in msecs. Set timeout < 0 to never time out. Returns 0 when all
+ * processes are terminated, -2 on timeout. */
 int process_wait(process_info_t *vec, int n, int timeout) {
   int i;
   HANDLE handles[MAXIMUM_WAIT_OBJECTS];
@@ -228,7 +233,7 @@ int process_copy_output(process_info_t* p, FILE* stream) {
 
   while (fgets(buf, sizeof(buf), f) != NULL)
     print_lines(buf, strlen(buf), stream);
-  
+
   if (ferror(f))
     return -1;
 
